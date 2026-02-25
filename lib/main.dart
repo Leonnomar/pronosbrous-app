@@ -27,13 +27,29 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final partidoDemo = Partido(
-      equipoLocal: "América",
-      equipoVisitante: "Chivas",
-      golesLocal: 0,
-      golesVisitante: 1,
-      fase: "Jornada 7",
-    );
+    final List<Partido> partidos = [
+      Partido(
+        equipoLocal: "América",
+        equipoVisitante: "Chivas",
+        golesLocal: 0,
+        golesVisitante: 1,
+        fase: "Jornada 6",
+      ),
+      Partido(
+        equipoLocal: "Real Madrid",
+        equipoVisitante: "Barcelona",
+        golesLocal: 1,
+        golesVisitante: 3,
+        fase: "Jornada 28",
+      ),
+      Partido(
+        equipoLocal: "Manchester City",
+        equipoVisitante: "Juventus",
+        golesLocal: 3,
+        golesVisitante: 1,
+        fase: "Final",
+      ),
+    ];
     return Scaffold(
       appBar: AppBar(
         title: const Text("PronósBrous ⚽"),
@@ -41,12 +57,25 @@ class HomeScreen extends StatelessWidget {
         foregroundColor: Colors.green,
         elevation: 1,
       ),
-      body: Center(
-        child: Text(
-          "${partidoDemo.equipoLocal} ${partidoDemo.golesLocal} - "
-          "${partidoDemo.golesVisitante} ${partidoDemo.equipoVisitante}",
-          style: const TextStyle(fontSize: 20),
-        ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: partidos.length,
+        itemBuilder: (context, index) {
+          final partido = partidos[index];
+
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ListTile(
+              title: Text(
+                "${partido.equipoLocal} vs ${partido.equipoVisitante}",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                "Marcador: ${partido.golesLocal} - ${partido.golesVisitante}\nFase: ${partido.fase}",
+              ),
+            ),
+          );
+        },
       ),
     );
   }
