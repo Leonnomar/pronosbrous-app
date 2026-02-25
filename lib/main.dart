@@ -22,34 +22,41 @@ class PronosBrousApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+
+  final List<Partido> partidos = [
+    Partido(
+      equipoLocal: "América",
+      equipoVisitante: "Chivas",
+      golesLocal: 0,
+      golesVisitante: 1,
+      fase: "Jornada 6",
+    ),
+    Partido(
+      equipoLocal: "Real Madrid",
+      equipoVisitante: "Barcelona",
+      golesLocal: 1,
+      golesVisitante: 3,
+      fase: "Jornada 28",
+    ),
+    Partido(
+      equipoLocal: "Manchester City",
+      equipoVisitante: "Juventus",
+      golesLocal: 3,
+      golesVisitante: 1,
+      fase: "Final",
+    ),
+  ];
+
+  @override
   Widget build(BuildContext context) {
-    final List<Partido> partidos = [
-      Partido(
-        equipoLocal: "América",
-        equipoVisitante: "Chivas",
-        golesLocal: 0,
-        golesVisitante: 1,
-        fase: "Jornada 6",
-      ),
-      Partido(
-        equipoLocal: "Real Madrid",
-        equipoVisitante: "Barcelona",
-        golesLocal: 1,
-        golesVisitante: 3,
-        fase: "Jornada 28",
-      ),
-      Partido(
-        equipoLocal: "Manchester City",
-        equipoVisitante: "Juventus",
-        golesLocal: 3,
-        golesVisitante: 1,
-        fase: "Final",
-      ),
-    ];
     return Scaffold(
       appBar: AppBar(
         title: const Text("PronósBrous ⚽"),
