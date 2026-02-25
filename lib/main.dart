@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'models/partido.dart';
 
 void main() {
   runApp(const PronosBrousApp());
@@ -26,6 +27,13 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final partidoDemo = Partido(
+      equipoLocal: "América",
+      equipoVisitante: "Chivas",
+      golesLocal: 0,
+      golesVisitante: 1,
+      fase: "Jornada 7",
+    );
     return Scaffold(
       appBar: AppBar(
         title: const Text("PronósBrous ⚽"),
@@ -33,10 +41,11 @@ class HomeScreen extends StatelessWidget {
         foregroundColor: Colors.green,
         elevation: 1,
       ),
-      body: const Center(
+      body: Center(
         child: Text(
-          "Bienvenido a PronósBrous",
-          style: TextStyle(fontSize: 18),
+          "${partidoDemo.equipoLocal} ${partidoDemo.golesLocal} - "
+          "${partidoDemo.golesVisitante} ${partidoDemo.equipoVisitante}",
+          style: const TextStyle(fontSize: 20),
         ),
       ),
     );
