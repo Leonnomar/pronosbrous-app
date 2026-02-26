@@ -55,6 +55,16 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ];
 
+  int calcularPuntos(Partido partido) {
+    if (partido.esEmpate) {
+      return 1;
+    } else if (partido.ganaLocal) {
+      return 3;
+    } else {
+      return 0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,7 +88,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: Text(
-                "Marcador: ${partido.golesLocal} - ${partido.golesVisitante}\nFase: ${partido.fase}",
+                "Marcador: ${partido.golesLocal} - ${partido.golesVisitante}\n"
+                "Fase: ${partido.fase}\n"
+                "Puntos: ${calcularPuntos(partido)}",
               ),
             ),
           );
