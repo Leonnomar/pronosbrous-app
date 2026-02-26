@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'models/partido.dart';
+import 'models/prediccion.dart';
 
 void main() {
   runApp(const PronosBrousApp());
@@ -55,14 +56,33 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ];
 
-  int calcularPuntos(Partido partido) {
-    if (partido.esEmpate) {
-      return 1;
-    } else if (partido.ganaLocal) {
-      return 3;
-    } else {
-      return 0;
+  final Map<int, Prediccion> predicciones = {
+    0: Prediccion(golesLocal: 2, golesVisitante: 1),
+    1: Prediccion(golesLocal: 0, golesVisitante: 0),
+    2: Prediccion(golesLocal: 3, golesVisitante: 1),
+  };
+
+  int calcularPuntos(int index) {
+    final partido = partidos[index];
+    final prediccion = predicciones[index];
+
+    if (prediccion == null) return 0;
+
+    // Marcador exacto
+    if (partido.golesLocal == prediccion.golesLocal &&
+        partido.golesVisitante == prediccion.golesVisitante) {
+      return 5;
     }
+
+    // Acierta ganador
+    if ((partido.golesLocal > partido.golesVisitante &&
+            prediccion.golesLocal > prediccion.golesVisitante) ||
+        (partido.golesLocal < partido.golesVisitante &&
+            prediccion.golesLocal < prediccion.golesVisitante)) {
+      return 3;
+    }
+    
+    return 0;
   }
 
   @override
@@ -90,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle: Text(
                 "Marcador: ${partido.golesLocal} - ${partido.golesVisitante}\n"
                 "Fase: ${partido.fase}\n"
-                "Puntos: ${calcularPuntos(partido)}",
+                "Puntos: ${calcularPuntos(index)}",
               ),
             ),
           );
