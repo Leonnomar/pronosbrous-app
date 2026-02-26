@@ -81,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
             prediccion.golesLocal < prediccion.golesVisitante)) {
       return 3;
     }
-    
+
     return 0;
   }
 
@@ -101,16 +101,82 @@ class _HomeScreenState extends State<HomeScreen> {
           final partido = partidos[index];
 
           return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: ListTile(
-              title: Text(
-                "${partido.equipoLocal} vs ${partido.equipoVisitante}",
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                "Marcador: ${partido.golesLocal} - ${partido.golesVisitante}\n"
-                "Fase: ${partido.fase}\n"
-                "Puntos: ${calcularPuntos(index)}",
+            margin: const EdgeInsets.only(bottom: 16),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "${partido.equipoLocal} vs ${partido.equipoVisitante}",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Text("Resultado real: ${partido.golesLocal} - ${partido.golesVisitante}"),
+
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: "Goles Local",
+                          ),
+                          onChanged: (value) {
+                            final golesLocal = int.tryParse(value) ?? 0;
+                            final actual = predicciones[index];
+
+                            setState(() {
+                              predicciones[index] = Prediccion(
+                                golesLocal: golesLocal,
+                                golesVisitante: actual?.golesVisitante ?? 0,
+                              );
+                            });
+                          },
+                        ),
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      Expanded(
+                        child: TextField(
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: "Goles Visitante",
+                          ),
+                          onChanged: (value) {
+                            final golesVisitante = int.tryParse(value) ?? 0;
+                            final actual = predicciones[index];
+
+                            setState(() {
+                              predicciones[index] = Prediccion(
+                                golesLocal: actual?.golesLocal ?? 0,
+                                golesVisitante: golesVisitante,
+                              );
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Text(
+                    "Puntos: ${calcularPuntos(index)}",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
               ),
             ),
           );
