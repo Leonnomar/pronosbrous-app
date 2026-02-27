@@ -53,6 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
       golesLocal: 3,
       golesVisitante: 1,
       fase: "Final",
+      ronda: RondaEliminatoria.finalRonda,
+      equipoClasificadoReal: "Manchester City",
     ),
   ];
 
@@ -62,27 +64,70 @@ class _HomeScreenState extends State<HomeScreen> {
     2: Prediccion(golesLocal: 3, golesVisitante: 1),
   };
 
+  int obtenerBonusRonda(RondaEliminatoria ronda) {
+    switch (ronda) {
+      case RondaEliminatoria.dieciseisavos:
+        return 1;
+      case RondaEliminatoria.octavos:
+        return 2;
+      case RondaEliminatoria.cuartos:
+        return 3;
+      case RondaEliminatoria.semifinal:
+        return 4;
+      case RondaEliminatoria.tercerLugar:
+        return 4;
+      case RondaEliminatoria.finalRonda:
+        return 5;
+    }
+  }
+
   int calcularPuntos(int index) {
     final partido = partidos[index];
     final prediccion = predicciones[index];
 
     if (prediccion == null) return 0;
 
+    int puntos = 0;
+
     // Marcador exacto
-    if (partido.golesLocal == prediccion.golesLocal &&
-        partido.golesVisitante == prediccion.golesVisitante) {
-      return 5;
-    }
+    bool marcadorExacto =
+        partido.golesLocal == prediccion.golesLocal &&
+        partido.golesVisitante == prediccion.golesVisitante;
 
     // Acierta ganador
-    if ((partido.golesLocal > partido.golesVisitante &&
+    bool mismoResultado =
+        (partido.golesLocal > partido.golesVisitante &&
             prediccion.golesLocal > prediccion.golesVisitante) ||
         (partido.golesLocal < partido.golesVisitante &&
-            prediccion.golesLocal < prediccion.golesVisitante)) {
-      return 3;
+            prediccion.golesLocal < prediccion.golesVisitante) ||
+        (partido.golesLocal == partido.golesVisitante &&
+            prediccion.golesLocal == prediccion.golesVisitante);
+
+    if (marcadorExacto) {
+      puntos += 5;
+    } else if (mismoResultado) {
+      puntos += 3;
     }
 
-    return 0;
+    // Bonus por eliminatoria
+    if (partido.ronda != null) {
+      String clasificadoReal = partido.equipoClasificadoReal!;
+
+      String clasificadoPredicho;
+
+      if (prediccion.golesLocal > prediccion.golesVisitante) {
+        clasificadoPredicho = partido.equipoLocal;
+      } else if (prediccion.golesLocal < prediccion.golesVisitante) {
+        clasificadoPredicho = partido.equipoVisitante;
+      } else {
+        clasificadoPredicho = prediccion.equipoClasificado ?? "";
+      }
+      if (clasificadoPredicho == clasificadoReal) {
+        puntos += obtenerBonusRonda(partido.ronda!);
+      }
+    }
+
+    return puntos;
   }
 
   @override

@@ -1,9 +1,20 @@
+enum RondaEliminatoria {
+    dieciseisavos,
+    octavos,
+    cuartos,
+    semifinal,
+    tercerLugar,
+    finalRonda
+}
+    
 class Partido {
     final String equipoLocal;
     final String equipoVisitante;
     final int golesLocal;
     final int golesVisitante;
     final String fase;
+    final RondaEliminatoria? ronda;
+    final String? equipoClasificadoReal;
     final bool tienePenales;
 
     Partido({
@@ -12,6 +23,8 @@ class Partido {
         required this.golesLocal,
         required this.golesVisitante,
         required this.fase,
+        this.ronda,
+        this.equipoClasificadoReal,
         this.tienePenales = false,
     });
 

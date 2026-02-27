@@ -1,10 +1,12 @@
 class Prediccion {
     final int golesLocal;
     final int golesVisitante;
+    final String? equipoClasificado;
 
     Prediccion({
         required this.golesLocal,
         required this.golesVisitante,
+        this.equipoClasificado,
     });
 
     bool get esEmpate => golesLocal == golesVisitante;
