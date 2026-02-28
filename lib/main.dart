@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'models/partido.dart';
 import 'models/prediccion.dart';
+import 'models/serie_eliminatoria.dart';
 
 void main() {
   runApp(const PronosBrousApp());
@@ -50,11 +51,34 @@ class _HomeScreenState extends State<HomeScreen> {
     Partido(
       equipoLocal: "Manchester City",
       equipoVisitante: "Juventus",
-      golesLocal: 3,
+      golesLocal: 2,
       golesVisitante: 1,
-      fase: "Final",
-      ronda: RondaEliminatoria.finalRonda,
-      equipoClasificadoReal: "Manchester City",
+      fase: "Cuartos",
+      ronda: RondaEliminatoria.cuartos,
+      serieId: "serie1",
+      esVuelta: false,
+    ),
+    Partido(
+      equipoLocal: "Juventus",
+      equipoVisitante: "Manchester City",
+      golesLocal: 0,
+      golesVisitante: 1,
+      fase: "Cuartos",
+      ronda: RondaEliminatoria.cuartos,
+      serieId: "serie1",
+      esVuelta: true,
+    ),
+  ];
+
+  final List<SerieEliminatoria> series = [
+    SerieEliminatoria(
+      id: "serie1",
+      equipoLocal: "Manchester City",
+      equipoVisitante: "Juventus",
+      golesGlobalLocal: 3,
+      golesGlobalVisitante: 1,
+      clasificadoReal: "Manchester City",
+      ronda: RondaEliminatoria.cuartos,
     ),
   ];
 
@@ -78,6 +102,40 @@ class _HomeScreenState extends State<HomeScreen> {
         return 4;
       case RondaEliminatoria.finalRonda:
         return 5;
+    }
+  }
+
+  String? obtenerClasificadoPredicho(String serieId) {
+    final SerieEliminatoria serie = series.firstWhere((s) => s.id == serieId);
+
+    final partidosSerie =
+        partidos.where((p) => p.serieId == serieId).toList();
+    
+
+    int globalLocal = 0;
+    int globalVisitante = 0;
+
+    for (var partido in partidosSerie) {
+      final index = partidos.indexOf(partido);
+      final prediccion = predicciones[index];
+
+      if (prediccion == null) return null;
+
+      if (partido.equipoLocal == serie.equipoLocal) {
+        globalLocal += prediccion.golesLocal;
+        globalVisitante += prediccion.golesVisitante;
+      } else {
+        globalLocal += prediccion.golesVisitante;
+        globalVisitante += prediccion.golesLocal;
+      }
+    }
+
+    if (globalLocal > globalVisitante) {
+      return serie.equipoLocal;
+    } else if (globalVisitante > globalLocal) {
+      return serie.equipoVisitante;
+    } else {
+      return null;
     }
   }
 
@@ -110,19 +168,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     // Bonus por eliminatoria
-    if (partido.ronda != null) {
-      String clasificadoReal = partido.equipoClasificadoReal!;
+    if (partido.serieId != null && partido.esVuelta) {
+      String? clasificadoPredicho = obtenerClasificadoPredicho(partido.serieId!);
+      
+      final SerieEliminatoria serie = series.firstWhere((s) => s.id == partido.serieId);
 
-      String clasificadoPredicho;
-
-      if (prediccion.golesLocal > prediccion.golesVisitante) {
-        clasificadoPredicho = partido.equipoLocal;
-      } else if (prediccion.golesLocal < prediccion.golesVisitante) {
-        clasificadoPredicho = partido.equipoVisitante;
-      } else {
-        clasificadoPredicho = prediccion.equipoClasificado ?? "";
-      }
-      if (clasificadoPredicho == clasificadoReal) {
+      if (clasificadoPredicho == serie.clasificadoReal) {
         puntos += obtenerBonusRonda(partido.ronda!);
       }
     }
