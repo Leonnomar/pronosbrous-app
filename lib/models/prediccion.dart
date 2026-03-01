@@ -2,6 +2,7 @@ class Prediccion {
     final int golesLocal;
     final int golesVisitante;
     final String? equipoClasificado;
+    String? ganadorPenalesUsuario;
 
     Prediccion({
         required this.golesLocal,

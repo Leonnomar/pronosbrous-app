@@ -67,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ronda: RondaEliminatoria.cuartos,
       serieId: "serie1",
       esVuelta: true,
+      fueAPenales: false,
     ),
   ];
 
@@ -87,6 +88,10 @@ class _HomeScreenState extends State<HomeScreen> {
     1: Prediccion(golesLocal: 0, golesVisitante: 0),
     2: Prediccion(golesLocal: 3, golesVisitante: 1),
   };
+
+  Map<int, String?> ganadorPenalesUsuario = {};
+
+  List<int> puntosUsuario = [];
 
   int obtenerBonusRonda(RondaEliminatoria ronda) {
     switch (ronda) {
@@ -139,6 +144,31 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  bool debeMostrarPenales(int index) {
+    final partido = partidos[index];
+    final prediccion = predicciones[index];
+
+    if (prediccion == null) return false;
+
+    // Caso liga normal
+    if (partido.serieId == null) return false;
+
+    // Partido único
+    final partidosSerie = partidos.where((p) => p.serieId == partido.serieId).toList();
+
+    if (partidosSerie.length == 1) {
+      return prediccion.golesLocal == prediccion.golesVisitante;
+    }
+
+    // Ida y vuelta
+    if (!partido.esVuelta) return false;
+
+    final clasificado = obtenerClasificadoPredicho(partido.serieId!);
+
+    // Si es null = empate global
+    return clasificado == null;
+  }
+
   int calcularPuntos(int index) {
     final partido = partidos[index];
     final prediccion = predicciones[index];
@@ -178,7 +208,29 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
+
+    // Bonus por penales
+    if (partido.serieId != null && partido.esVuelta) {
+      
+      String? clasificadoPredicho = obtenerClasificadoPredicho(partido.serieId!);
+
+      final SerieEliminatoria serie = series.firstWhere((s) => s.id == partido.serieId);
+      
+      if (clasificadoPredicho == null &&
+        ganadorPenalesUsuario[index] != null &&
+        ganadorPenalesUsuario[index] == serie.clasificadoReal) {
+      puntos += 2;
+      }
+    }
+
     return puntos;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    puntosUsuario = List.filled(partidos.length, 0);
   }
 
   @override
@@ -195,6 +247,14 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: partidos.length,
         itemBuilder: (context, index) {
           final partido = partidos[index];
+
+          bool mostrarPenales = debeMostrarPenales(index);
+
+          String? clasificadoPredicho;
+
+          if (partido.serieId != null) {
+            clasificadoPredicho = obtenerClasificadoPredicho(partido.serieId!);
+          }
 
           return Card(
             margin: const EdgeInsets.only(bottom: 16),
@@ -262,6 +322,65 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
+
+                  if (mostrarPenales) ...[
+                    const SizedBox(height: 10),
+                    const Text("¿Quién gana en penales?"),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: ganadorPenalesUsuario[index] == partido.equipoLocal
+                                ? Colors.green
+                                : Colors.grey[300],
+                            foregroundColor: ganadorPenalesUsuario[index] == partido.equipoLocal
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              ganadorPenalesUsuario[index] = partido.equipoLocal;
+                            });
+                          },
+                          child: Text(partido.equipoLocal),
+                        ),
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: ganadorPenalesUsuario[index] == partido.equipoVisitante
+                                ? Colors.green
+                                : Colors.grey[300],
+                            foregroundColor: ganadorPenalesUsuario[index] == partido.equipoVisitante
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              ganadorPenalesUsuario[index] = partido.equipoVisitante;
+                            });
+                          },
+                          child: Text(partido.equipoVisitante),
+                        ),
+                      ],
+                    ),
+                    // Bonus por penales
+                    if (partido.serieId != null &&
+                        partido.esVuelta &&
+                        clasificadoPredicho == null &&
+                        ganadorPenalesUsuario[index] != null &&
+                        ganadorPenalesUsuario[index] == series.firstWhere((s) => s.id == partido.serieId).clasificadoReal) ...[
+                      const SizedBox(height: 6),
+                      const Text(
+                        "+2 puntos bonus por penales 🎯",
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ],
 
                   const SizedBox(height: 12),
 

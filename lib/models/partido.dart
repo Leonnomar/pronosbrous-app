@@ -6,6 +6,12 @@ enum RondaEliminatoria {
     tercerLugar,
     finalRonda
 }
+
+enum TipoEliminatoria {
+    ninguna,
+    idaVuelta,
+    partidoUnico,
+}
     
 class Partido {
     final String equipoLocal;
@@ -18,7 +24,9 @@ class Partido {
     final String? serieId;
     final bool esVuelta;
     final String? equipoClasificadoReal;
-    final bool tienePenales;
+    final TipoEliminatoria tipoEliminatoria;
+    final bool fueAPenales;
+    final String? ganadorPenalesReal;
 
     Partido({
         required this.equipoLocal,
@@ -27,11 +35,15 @@ class Partido {
         required this.golesLocal,
         required this.golesVisitante,
         required this.fase,
+
         this.ronda,
-        this.equipoClasificadoReal,
         this.serieId,
         this.esVuelta = false,
-        this.tienePenales = false,
+        this.equipoClasificadoReal,
+
+        this.tipoEliminatoria = TipoEliminatoria.ninguna,
+        this.fueAPenales = false,
+        this.ganadorPenalesReal,
     });
 
     bool get esEmpate => golesLocal == golesVisitante;
