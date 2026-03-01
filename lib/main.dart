@@ -69,6 +69,16 @@ class _HomeScreenState extends State<HomeScreen> {
       esVuelta: true,
       fueAPenales: false,
     ),
+    Partido(
+      equipoLocal: "PSG",
+      equipoVisitante: "Inter",
+      golesLocal: 5,
+      golesVisitante: 0,
+      fase: "Final",
+      ronda: RondaEliminatoria.finalRonda,
+      serieId: "final1",
+      esVuelta: false,
+    )
   ];
 
   final List<SerieEliminatoria> series = [
@@ -81,13 +91,18 @@ class _HomeScreenState extends State<HomeScreen> {
       clasificadoReal: "Manchester City",
       ronda: RondaEliminatoria.cuartos,
     ),
+    SerieEliminatoria(
+      id: "final1",
+      equipoLocal: "PSG",
+      equipoVisitante: "Inter",
+      golesGlobalLocal: 5,
+      golesGlobalVisitante: 0,
+      clasificadoReal: "PSG",
+      ronda: RondaEliminatoria.finalRonda,
+    ),
   ];
 
-  final Map<int, Prediccion> predicciones = {
-    0: Prediccion(golesLocal: 2, golesVisitante: 1),
-    1: Prediccion(golesLocal: 0, golesVisitante: 0),
-    2: Prediccion(golesLocal: 3, golesVisitante: 1),
-  };
+  final Map<int, Prediccion> predicciones = {};
 
   Map<int, String?> ganadorPenalesUsuario = {};
 
@@ -161,12 +176,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     // Ida y vuelta
-    if (!partido.esVuelta) return false;
+    if (partidosSerie.length == 2 && partido.esVuelta) {
+      final clasificado = obtenerClasificadoPredicho(partido.serieId!);
 
-    final clasificado = obtenerClasificadoPredicho(partido.serieId!);
+      // Si es null = empate global
+      return clasificado == null;
+    }
 
-    // Si es null = empate global
-    return clasificado == null;
+    return false;
   }
 
   int calcularPuntos(int index) {
@@ -198,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     // Bonus por eliminatoria
-    if (partido.serieId != null && partido.esVuelta) {
+    if (partido.serieId != null) {
       String? clasificadoPredicho = obtenerClasificadoPredicho(partido.serieId!);
       
       final SerieEliminatoria serie = series.firstWhere((s) => s.id == partido.serieId);
@@ -210,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
     // Bonus por penales
-    if (partido.serieId != null && partido.esVuelta) {
+    if (partido.serieId != null) {
       
       String? clasificadoPredicho = obtenerClasificadoPredicho(partido.serieId!);
 
