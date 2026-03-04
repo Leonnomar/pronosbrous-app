@@ -78,6 +78,28 @@ class _HomeScreenState extends State<HomeScreen> {
       ronda: RondaEliminatoria.finalRonda,
       serieId: "final1",
       esVuelta: false,
+
+    ),
+    Partido(
+      equipoLocal: "LAFC",
+      equipoVisitante: "Tigres",
+      golesLocal: 1,
+      golesVisitante: 2,
+      fase: "Cuartos",
+      ronda: RondaEliminatoria.cuartos,
+      serieId: "serieConcacaf",
+      esVuelta: false,
+    ),
+    Partido(
+      equipoLocal: "Tigres",
+      equipoVisitante: "LAFC",
+      golesLocal: 0,
+      golesVisitante: 1,
+      fase: "Cuartos",
+      ronda: RondaEliminatoria.cuartos,
+      serieId: "serieConcacaf",
+      esVuelta: true,
+      fueAPenales: false,
     )
   ];
 
@@ -100,6 +122,16 @@ class _HomeScreenState extends State<HomeScreen> {
       clasificadoReal: "PSG",
       ronda: RondaEliminatoria.finalRonda,
     ),
+    SerieEliminatoria(
+      id: "serieConcacaf",
+      equipoLocal: "LAFC",
+      equipoVisitante: "Tigres",
+      golesGlobalLocal: 2,
+      golesGlobalVisitante: 2,
+      clasificadoReal: "Tigres",
+      ronda: RondaEliminatoria.cuartos,
+      reglaGolVisitante: true,
+    )
   ];
 
   final Map<int, Prediccion> predicciones = {};
@@ -131,9 +163,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final partidosSerie =
         partidos.where((p) => p.serieId == serieId).toList();
     
-
     int globalLocal = 0;
     int globalVisitante = 0;
+
+    int golesVisitanteLocal = 0;
+    int golesVisitanteVisitante = 0;
 
     for (var partido in partidosSerie) {
       final index = partidos.indexOf(partido);
@@ -141,22 +175,40 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (prediccion == null) return null;
 
-      if (partido.equipoLocal == serie.equipoLocal) {
+      if (!partido.esVuelta) {
         globalLocal += prediccion.golesLocal;
         globalVisitante += prediccion.golesVisitante;
+
+        golesVisitanteVisitante += prediccion.golesVisitante;
       } else {
         globalLocal += prediccion.golesVisitante;
         globalVisitante += prediccion.golesLocal;
+
+        golesVisitanteLocal += prediccion.golesVisitante;
       }
     }
 
+    // Decide por global
     if (globalLocal > globalVisitante) {
       return serie.equipoLocal;
-    } else if (globalVisitante > globalLocal) {
-      return serie.equipoVisitante;
-    } else {
-      return null;
     }
+    if (globalVisitante > globalLocal) {
+      return serie.equipoVisitante;
+    }
+    
+    // Regla gol vistante
+    if (serie.reglaGolVisitante) { 
+
+      if (golesVisitanteLocal > golesVisitanteVisitante) {
+        return serie.equipoLocal;
+      }
+
+      if (golesVisitanteVisitante > golesVisitanteLocal) {
+        return serie.equipoVisitante;
+      }
+    }
+    
+    return null;
   }
 
   bool debeMostrarPenales(int index) {
@@ -216,27 +268,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Bonus por eliminatoria
     if (partido.serieId != null) {
-      String? clasificadoPredicho = obtenerClasificadoPredicho(partido.serieId!);
-      
-      final SerieEliminatoria serie = series.firstWhere((s) => s.id == partido.serieId);
 
-      if (clasificadoPredicho == serie.clasificadoReal) {
-        puntos += obtenerBonusRonda(partido.ronda!);
-      }
-    }
-
-
-    // Bonus por penales
-    if (partido.serieId != null) {
-      
-      String? clasificadoPredicho = obtenerClasificadoPredicho(partido.serieId!);
+      final partidosSerie = partidos.where((p) => p.serieId == partido.serieId).toList();
 
       final SerieEliminatoria serie = series.firstWhere((s) => s.id == partido.serieId);
-      
-      if (clasificadoPredicho == null &&
-        ganadorPenalesUsuario[index] != null &&
-        ganadorPenalesUsuario[index] == serie.clasificadoReal) {
-      puntos += 2;
+
+      String? clasificadoPredicho = obtenerClasificadoPredicho(partido.serieId!);
+
+      bool esPartidoUnico = partidosSerie.length == 1;
+      bool esVuelta = partidosSerie.length == 2 && partido.esVuelta;
+
+      if (esPartidoUnico || esVuelta) {
+  
+        if (clasificadoPredicho == serie.clasificadoReal) {
+          puntos += obtenerBonusRonda(partido.ronda!);
+        }
+    
+        // Bonus por penales
+        if (clasificadoPredicho == null &&
+            ganadorPenalesUsuario[index] != null &&
+            ganadorPenalesUsuario[index] == serie.clasificadoReal) {
+          puntos += 2;
+        }
       }
     }
 

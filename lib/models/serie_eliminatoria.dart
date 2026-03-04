@@ -9,6 +9,7 @@ class SerieEliminatoria {
     final int golesGlobalVisitante;
 
     final String clasificadoReal;
+    final bool reglaGolVisitante;
 
     final RondaEliminatoria ronda;
 
@@ -19,6 +20,7 @@ class SerieEliminatoria {
         required this.golesGlobalLocal,
         required this.golesGlobalVisitante,
         required this.clasificadoReal,
+        this.reglaGolVisitante = false,
         required this.ronda,
     });
 }
