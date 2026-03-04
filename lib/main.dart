@@ -4,6 +4,30 @@ import 'models/partido.dart';
 import 'models/prediccion.dart';
 import 'models/serie_eliminatoria.dart';
 
+class MaxGoalsInputFormatter extends TextInputFormatter {
+  final int max;
+
+  MaxGoalsInputFormatter(this.max);
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) return newValue;
+
+    final int? value = int.tryParse(newValue.text);
+
+    if (value == null) return oldValue;
+
+    if (value > max) {
+      return oldValue;
+    }
+
+    return newValue;
+  }
+}
+
 void main() {
   runApp(const PronosBrousApp());
 }
@@ -432,6 +456,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: TextField(
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(2),
+                            MaxGoalsInputFormatter(30),
                           ],
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
@@ -464,6 +490,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: TextField(
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(2),
+                            MaxGoalsInputFormatter(30),
                           ],
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
