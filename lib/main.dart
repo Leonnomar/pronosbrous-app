@@ -100,6 +100,27 @@ class _HomeScreenState extends State<HomeScreen> {
       serieId: "serieConcacaf",
       esVuelta: true,
       fueAPenales: false,
+    ),
+    Partido(
+      equipoLocal: "Guadalajara",
+      equipoVisitante: "Cruz Azul",
+      golesLocal: 0,
+      golesVisitante: 0,
+      fase: "Cuartos",
+      ronda: RondaEliminatoria.cuartos,
+      serieId: "liguilla_cuartos_1",
+      esVuelta: false,
+    ),
+    Partido(
+      equipoLocal: "Cruz Azul",
+      equipoVisitante: "Guadalajara",
+      golesLocal: 3,
+      golesVisitante: 2,
+      fase: "Cuartos",
+      ronda: RondaEliminatoria.cuartos,
+      serieId: "liguilla_cuartos_1",
+      esVuelta: true,
+      fueAPenales: false,
     )
   ];
 
@@ -112,6 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
       golesGlobalVisitante: 1,
       clasificadoReal: "Manchester City",
       ronda: RondaEliminatoria.cuartos,
+      tipoDesempate: TipoDesempate.penales,
     ),
     SerieEliminatoria(
       id: "final1",
@@ -121,6 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
       golesGlobalVisitante: 0,
       clasificadoReal: "PSG",
       ronda: RondaEliminatoria.finalRonda,
+      tipoDesempate: TipoDesempate.penales,
     ),
     SerieEliminatoria(
       id: "serieConcacaf",
@@ -130,8 +153,18 @@ class _HomeScreenState extends State<HomeScreen> {
       golesGlobalVisitante: 2,
       clasificadoReal: "Tigres",
       ronda: RondaEliminatoria.cuartos,
-      reglaGolVisitante: true,
-    )
+      tipoDesempate: TipoDesempate.golVisitante,
+    ),
+    SerieEliminatoria(
+      id: "liguilla_cuartos_1",
+      equipoLocal: "Cruz Azul",
+      equipoVisitante: "Guadalajara",
+      golesGlobalLocal: 3,
+      golesGlobalVisitante: 2,
+      clasificadoReal: "Cruz Azul",
+      ronda: RondaEliminatoria.cuartos,
+      tipoDesempate: TipoDesempate.posicionTabla,
+    ),
   ];
 
   final Map<int, Prediccion> predicciones = {};
@@ -158,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String? obtenerClasificadoPredicho(String serieId) {
-    final SerieEliminatoria serie = series.firstWhere((s) => s.id == serieId);
+    final SerieEliminatoria serie = series.firstWhere((s) => s.id == serieId!);
 
     final partidosSerie =
         partidos.where((p) => p.serieId == serieId).toList();
@@ -195,20 +228,24 @@ class _HomeScreenState extends State<HomeScreen> {
     if (globalVisitante > globalLocal) {
       return serie.equipoVisitante;
     }
-    
-    // Regla gol vistante
-    if (serie.reglaGolVisitante) { 
 
-      if (golesVisitanteLocal > golesVisitanteVisitante) {
-        return serie.equipoLocal;
-      }
-
-      if (golesVisitanteVisitante > golesVisitanteLocal) {
-        return serie.equipoVisitante;
-      }
+    // Regla de desempate
+    switch (serie.tipoDesempate) {
+      case TipoDesempate.golVisitante:
+        if (golesVisitanteLocal > golesVisitanteVisitante) {
+          return serie.equipoLocal;
+        }
+        if (golesVisitanteVisitante > golesVisitanteLocal) {
+          return serie.equipoVisitante;
+        }
+        return null;
+      
+      case TipoDesempate.posicionTabla:
+        return serie.clasificadoReal;
+      
+      case TipoDesempate.penales:
+        return null;
     }
-    
-    return null;
   }
 
   bool debeMostrarPenales(int index) {
@@ -233,6 +270,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // Si es null = empate global
       return clasificado == null;
+    }
+
+    final SerieEliminatoria serie = series.firstWhere((s) => s.id == partido.serieId!);
+
+    if (serie.tipoDesempate != TipoDesempate.penales) {
+      return false;
     }
 
     return false;
@@ -280,7 +323,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (esPartidoUnico || esVuelta) {
   
-        if (clasificadoPredicho == serie.clasificadoReal) {
+        if (mismoResultado && clasificadoPredicho == serie.clasificadoReal) {
           puntos += obtenerBonusRonda(partido.ronda!);
         }
     
@@ -364,6 +407,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 golesLocal: golesLocal,
                                 golesVisitante: actual?.golesVisitante ?? 0,
                               );
+
+                              puntosUsuario[index] = calcularPuntos(index);
                             });
                           },
                         ),
@@ -386,6 +431,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 golesLocal: actual?.golesLocal ?? 0,
                                 golesVisitante: golesVisitante,
                               );
+
+                              puntosUsuario[index] = calcularPuntos(index);
                             });
                           },
                         ),
@@ -412,6 +459,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onPressed: () {
                             setState(() {
                               ganadorPenalesUsuario[index] = partido.equipoLocal;
+                              puntosUsuario[index] = calcularPuntos(index);
                             });
                           },
                           child: Text(partido.equipoLocal),
@@ -429,6 +477,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onPressed: () {
                             setState(() {
                               ganadorPenalesUsuario[index] = partido.equipoVisitante;
+                              puntosUsuario[index] = calcularPuntos(index);
                             });
                           },
                           child: Text(partido.equipoVisitante),
@@ -455,7 +504,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 12),
 
                   Text(
-                    "Puntos: ${calcularPuntos(index)}",
+                    "Puntos: ${puntosUsuario[index]}",
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.green,

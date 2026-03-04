@@ -1,5 +1,11 @@
 import 'partido.dart';
 
+enum TipoDesempate {
+    penales,
+    golVisitante,
+    posicionTabla,
+}
+
 class SerieEliminatoria {
     final String id;
     final String equipoLocal;
@@ -9,8 +15,8 @@ class SerieEliminatoria {
     final int golesGlobalVisitante;
 
     final String clasificadoReal;
-    final bool reglaGolVisitante;
 
+    final TipoDesempate tipoDesempate;
     final RondaEliminatoria ronda;
 
     SerieEliminatoria({
@@ -20,7 +26,7 @@ class SerieEliminatoria {
         required this.golesGlobalLocal,
         required this.golesGlobalVisitante,
         required this.clasificadoReal,
-        this.reglaGolVisitante = false,
+        required this.tipoDesempate,
         required this.ronda,
     });
 }
