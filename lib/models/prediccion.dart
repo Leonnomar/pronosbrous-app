@@ -1,18 +1,20 @@
 class Prediccion {
-    final int golesLocal;
-    final int golesVisitante;
+    final int? golesLocal;
+    final int? golesVisitante;
     final String? equipoClasificado;
     String? ganadorPenalesUsuario;
 
     Prediccion({
-        required this.golesLocal,
-        required this.golesVisitante,
+        this.golesLocal,
+        this.golesVisitante,
         this.equipoClasificado,
     });
 
-    bool get esEmpate => golesLocal == golesVisitante;
+    bool get completa => golesLocal != null && golesVisitante != null;
 
-    bool get ganaLocal => golesLocal > golesVisitante;
+    bool get esEmpate => completa && golesLocal == golesVisitante;
 
-    bool get ganaVisitante => golesVisitante > golesLocal;
+    bool get ganaLocal => completa && golesLocal! > golesVisitante!;
+
+    bool get ganaVisitante => completa && golesVisitante! > golesLocal!;
 }

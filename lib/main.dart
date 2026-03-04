@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'models/partido.dart';
 import 'models/prediccion.dart';
@@ -206,18 +207,25 @@ class _HomeScreenState extends State<HomeScreen> {
       final index = partidos.indexOf(partido);
       final prediccion = predicciones[index];
 
-      if (prediccion == null) return null;
+      if (prediccion == null ||
+          prediccion.golesLocal == null ||
+          prediccion.golesVisitante == null) {
+        return null;
+      }
+
+      final golesLocal = prediccion.golesLocal!;
+      final golesVisitante = prediccion.golesVisitante!;
 
       if (!partido.esVuelta) {
-        globalLocal += prediccion.golesLocal;
-        globalVisitante += prediccion.golesVisitante;
+        globalLocal += golesLocal;
+        globalVisitante += golesVisitante;
 
-        golesVisitanteVisitante += prediccion.golesVisitante;
+        golesVisitanteVisitante += golesVisitante;
       } else {
-        globalLocal += prediccion.golesVisitante;
-        globalVisitante += prediccion.golesLocal;
+        globalLocal += golesVisitante;
+        globalVisitante += golesLocal;
 
-        golesVisitanteLocal += prediccion.golesVisitante;
+        golesVisitanteLocal += golesVisitante;
       }
     }
 
@@ -252,6 +260,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final partido = partidos[index];
     final prediccion = predicciones[index];
 
+    final mostrarPenales =
+        prediccion != null &&
+        prediccion.golesLocal != null &&
+        prediccion.golesVisitante != null &&
+        prediccion.golesLocal == prediccion.golesVisitante;
+
     if (prediccion == null) return false;
 
     // Caso liga normal
@@ -266,6 +280,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Ida y vuelta
     if (partidosSerie.length == 2 && partido.esVuelta) {
+
+      for (var p in partidosSerie) {
+        final i = partidos.indexOf(p);
+        final pred = predicciones[i];
+
+        if (pred == null ||
+            pred.golesLocal == null ||
+            pred.golesVisitante == null) {
+          return false;
+        }
+      }
       final clasificado = obtenerClasificadoPredicho(partido.serieId!);
 
       // Si es null = empate global
@@ -285,23 +310,30 @@ class _HomeScreenState extends State<HomeScreen> {
     final partido = partidos[index];
     final prediccion = predicciones[index];
 
-    if (prediccion == null) return 0;
+    if (prediccion == null ||
+        prediccion.golesLocal == null ||
+        prediccion.golesVisitante == null) {
+      return 0;
+    }
+
+    final golesLocal = prediccion.golesLocal!;
+    final golesVisitante = prediccion.golesVisitante!;
 
     int puntos = 0;
 
     // Marcador exacto
     bool marcadorExacto =
-        partido.golesLocal == prediccion.golesLocal &&
-        partido.golesVisitante == prediccion.golesVisitante;
+        partido.golesLocal == golesLocal &&
+        partido.golesVisitante == golesVisitante;
 
     // Acierta ganador
     bool mismoResultado =
         (partido.golesLocal > partido.golesVisitante &&
-            prediccion.golesLocal > prediccion.golesVisitante) ||
+            golesLocal > golesVisitante) ||
         (partido.golesLocal < partido.golesVisitante &&
-            prediccion.golesLocal < prediccion.golesVisitante) ||
+            golesLocal < golesVisitante) ||
         (partido.golesLocal == partido.golesVisitante &&
-            prediccion.golesLocal == prediccion.golesVisitante);
+            golesLocal == golesVisitante);
 
     if (marcadorExacto) {
       puntos += 5;
@@ -323,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (esPartidoUnico || esVuelta) {
   
-        if (mismoResultado && clasificadoPredicho == serie.clasificadoReal) {
+        if (clasificadoPredicho == serie.clasificadoReal) {
           puntos += obtenerBonusRonda(partido.ronda!);
         }
     
@@ -334,6 +366,10 @@ class _HomeScreenState extends State<HomeScreen> {
           puntos += 2;
         }
       }
+    }
+
+    if (golesLocal == null || golesVisitante == null) {
+      return 0;
     }
 
     return puntos;
@@ -394,20 +430,28 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Expanded(
                         child: TextField(
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
                             labelText: "Goles Local",
                           ),
                           onChanged: (value) {
-                            final golesLocal = int.tryParse(value) ?? 0;
-                            final actual = predicciones[index];
+                            setState (() {
+                              final actual = predicciones[index];
 
-                            setState(() {
-                              predicciones[index] = Prediccion(
-                                golesLocal: golesLocal,
-                                golesVisitante: actual?.golesVisitante ?? 0,
-                              );
-
+                              if (value.isEmpty) {
+                                predicciones[index] = Prediccion(
+                                  golesLocal: null,
+                                  golesVisitante: actual?.golesVisitante,
+                                );
+                              } else {
+                                predicciones[index] = Prediccion(
+                                  golesLocal: int.parse(value),
+                                  golesVisitante: actual?.golesVisitante,
+                                );
+                              }
                               puntosUsuario[index] = calcularPuntos(index);
                             });
                           },
@@ -418,19 +462,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       Expanded(
                         child: TextField(
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
                             labelText: "Goles Visitante",
                           ),
                           onChanged: (value) {
-                            final golesVisitante = int.tryParse(value) ?? 0;
-                            final actual = predicciones[index];
-
                             setState(() {
-                              predicciones[index] = Prediccion(
-                                golesLocal: actual?.golesLocal ?? 0,
-                                golesVisitante: golesVisitante,
-                              );
+                              final actual = predicciones[index];
+
+                              if (value.isEmpty) {
+                                predicciones[index] = Prediccion(
+                                  golesLocal: actual?.golesLocal,
+                                  golesVisitante: null,
+                                );
+                              } else {
+                                predicciones[index] = Prediccion(
+                                  golesLocal: actual?.golesLocal,
+                                  golesVisitante: int.parse(value),
+                                );
+                              }
 
                               puntosUsuario[index] = calcularPuntos(index);
                             });
