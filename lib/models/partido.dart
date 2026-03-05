@@ -14,6 +14,7 @@ enum TipoEliminatoria {
 }
     
 class Partido {
+    final String torneo;
     final String equipoLocal;
     final String equipoVisitante;
     //final DateTime fecha;
@@ -29,6 +30,7 @@ class Partido {
     final String? ganadorPenalesReal;
 
     Partido({
+        required this.torneo,
         required this.equipoLocal,
         required this.equipoVisitante,
 

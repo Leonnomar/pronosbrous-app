@@ -60,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Partido> partidos = [
     Partido(
+      torneo: "Liga BBVA",
       equipoLocal: "América",
       equipoVisitante: "Chivas",
       golesLocal: 0,
@@ -67,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
       fase: "Jornada 6",
     ),
     Partido(
+      torneo: "La Liga",
       equipoLocal: "Real Madrid",
       equipoVisitante: "Barcelona",
       golesLocal: 1,
@@ -74,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
       fase: "Jornada 28",
     ),
     Partido(
+      torneo: "Champions League",
       equipoLocal: "Manchester City",
       equipoVisitante: "Juventus",
       golesLocal: 2,
@@ -84,6 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
       esVuelta: false,
     ),
     Partido(
+      torneo: "Champions League",
       equipoLocal: "Juventus",
       equipoVisitante: "Manchester City",
       golesLocal: 0,
@@ -95,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
       fueAPenales: false,
     ),
     Partido(
+      torneo: "Champions League",
       equipoLocal: "PSG",
       equipoVisitante: "Inter",
       golesLocal: 5,
@@ -106,6 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     ),
     Partido(
+      torneo: "CONCACAF Champions Cup",
       equipoLocal: "LAFC",
       equipoVisitante: "Tigres",
       golesLocal: 1,
@@ -116,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
       esVuelta: false,
     ),
     Partido(
+      torneo: "CONCACAF Champions Cup",
       equipoLocal: "Tigres",
       equipoVisitante: "LAFC",
       golesLocal: 0,
@@ -127,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
       fueAPenales: false,
     ),
     Partido(
+      torneo: "Liga BBVA",
       equipoLocal: "Guadalajara",
       equipoVisitante: "Cruz Azul",
       golesLocal: 0,
@@ -137,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
       esVuelta: false,
     ),
     Partido(
+      torneo: "Liga BBVA",
       equipoLocal: "Cruz Azul",
       equipoVisitante: "Guadalajara",
       golesLocal: 3,
@@ -408,6 +417,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Torneo -> Ronda -> Lista de índices
+    Map<String, Map<RondaEliminatoria?, List<int>>> estructura = {};
+
+    for (int i = 0; i < partidos.length; i++) {
+      final partido = partidos[i];
+
+      estructura.putIfAbsent(partido.torneo, () => {});
+      estructura[partido.torneo]!
+          .putIfAbsent(partido.ronda, () => []);
+
+      estructura[partido.torneo]![partido.ronda]!.add(i);
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text("PronósBrous ⚽"),
@@ -415,187 +436,257 @@ class _HomeScreenState extends State<HomeScreen> {
         foregroundColor: Colors.green,
         elevation: 1,
       ),
-      body: ListView.builder(
+      body: ListView(
         padding: const EdgeInsets.all(16),
-        itemCount: partidos.length,
-        itemBuilder: (context, index) {
-          final partido = partidos[index];
+        children: estructura.entries.map((torneoEntry) {
 
-          bool mostrarPenales = debeMostrarPenales(index);
+          final torneo = torneoEntry.key;
+          final rondas = torneoEntry.value;
 
-          String? clasificadoPredicho;
-
-          if (partido.serieId != null) {
-            clasificadoPredicho = obtenerClasificadoPredicho(partido.serieId!);
-          }
-
-          return Card(
-            margin: const EdgeInsets.only(bottom: 16),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "${partido.equipoLocal} vs ${partido.equipoVisitante}",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical:10),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      torneo,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      )
                     ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Text("Resultado real: ${partido.golesLocal} - ${partido.golesVisitante}"),
-
-                  const SizedBox(height: 12),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(2),
-                            MaxGoalsInputFormatter(30),
-                          ],
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: "Goles Local",
-                          ),
-                          onChanged: (value) {
-                            setState (() {
-                              final actual = predicciones[index];
-
-                              if (value.isEmpty) {
-                                predicciones[index] = Prediccion(
-                                  golesLocal: null,
-                                  golesVisitante: actual?.golesVisitante,
-                                );
-                              } else {
-                                predicciones[index] = Prediccion(
-                                  golesLocal: int.parse(value),
-                                  golesVisitante: actual?.golesVisitante,
-                                );
-                              }
-                              puntosUsuario[index] = calcularPuntos(index);
-                            });
-                          },
-                        ),
-                      ),
-
-                      const SizedBox(width: 10),
-
-                      Expanded(
-                        child: TextField(
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(2),
-                            MaxGoalsInputFormatter(30),
-                          ],
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: "Goles Visitante",
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              final actual = predicciones[index];
-
-                              if (value.isEmpty) {
-                                predicciones[index] = Prediccion(
-                                  golesLocal: actual?.golesLocal,
-                                  golesVisitante: null,
-                                );
-                              } else {
-                                predicciones[index] = Prediccion(
-                                  golesLocal: actual?.golesLocal,
-                                  golesVisitante: int.parse(value),
-                                );
-                              }
-
-                              puntosUsuario[index] = calcularPuntos(index);
-                            });
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  if (mostrarPenales) ...[
-                    const SizedBox(height: 10),
-                    const Text("¿Quién gana en penales?"),
-                    const SizedBox(height: 6),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: ganadorPenalesUsuario[index] == partido.equipoLocal
-                                ? Colors.green
-                                : Colors.grey[300],
-                            foregroundColor: ganadorPenalesUsuario[index] == partido.equipoLocal
-                                ? Colors.white
-                                : Colors.black,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              ganadorPenalesUsuario[index] = partido.equipoLocal;
-                              puntosUsuario[index] = calcularPuntos(index);
-                            });
-                          },
-                          child: Text(partido.equipoLocal),
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: ganadorPenalesUsuario[index] == partido.equipoVisitante
-                                ? Colors.green
-                                : Colors.grey[300],
-                            foregroundColor: ganadorPenalesUsuario[index] == partido.equipoVisitante
-                                ? Colors.white
-                                : Colors.black,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              ganadorPenalesUsuario[index] = partido.equipoVisitante;
-                              puntosUsuario[index] = calcularPuntos(index);
-                            });
-                          },
-                          child: Text(partido.equipoVisitante),
-                        ),
-                      ],
-                    ),
-                    // Bonus por penales
-                    if (partido.serieId != null &&
-                        partido.esVuelta &&
-                        clasificadoPredicho == null &&
-                        ganadorPenalesUsuario[index] != null &&
-                        ganadorPenalesUsuario[index] == series.firstWhere((s) => s.id == partido.serieId).clasificadoReal) ...[
-                      const SizedBox(height: 6),
-                      const Text(
-                        "+2 puntos bonus por penales 🎯",
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
                   ],
+                ),
+              ),
 
-                  const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-                  Text(
-                    "Puntos: ${puntosUsuario[index]}",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
+              ...rondas.entries.map((rondaEntry) {
+
+                final ronda = rondaEntry.key;
+                final indices = rondaEntry.value;
+
+                int totalRonda = 0;
+                for (var i in indices) {
+                  totalRonda += puntosUsuario[i];
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    Text(
+                      ronda?.name.toUpperCase() ?? "FASE REGULAR",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
+
+                    Text(
+                      "Total ronda: $totalRonda pts",
+                      style: const TextStyle(
+                        color: Colors.grey,
+                      ),
+                    ),
+
+                    const SizedBox (height: 8),
+
+                    ...indices.map((i) => buildPartidoCard(i)).toList(),
+
+                    const SizedBox(height: 16),
+                  ],
+                );
+              }).toList(),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget buildPartidoCard(int index) {
+
+    final partido = partidos[index];
+    final mostrarPenales = debeMostrarPenales(index);
+
+    String? clasificadoPredicho;
+    if (partido.serieId != null) {
+      clasificadoPredicho = obtenerClasificadoPredicho(partido.serieId!);
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "${partido.equipoLocal} vs ${partido.equipoVisitante}",
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text("Resultado real: ${partido.golesLocal} - ${partido.golesVisitante}"),
+
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(2),
+                      MaxGoalsInputFormatter(30),
+                    ],
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: "Goles Local",
+                    ),
+                    onChanged: (value) {
+                      setState (() {
+                        final actual = predicciones[index];
+
+                        if (value.isEmpty) {
+                          predicciones[index] = Prediccion(
+                            golesLocal: null,
+                            golesVisitante: actual?.golesVisitante,
+                          );
+                        } else {
+                          predicciones[index] = Prediccion(
+                            golesLocal: int.parse(value),
+                            golesVisitante: actual?.golesVisitante,
+                          );
+                        }
+                        puntosUsuario[index] = calcularPuntos(index);
+                      });
+                    },
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                Expanded(
+                  child: TextField(
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(2),
+                      MaxGoalsInputFormatter(30),
+                    ],
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: "Goles Visitante",
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        final actual = predicciones[index];
+
+                        if (value.isEmpty) {
+                          predicciones[index] = Prediccion(
+                            golesLocal: actual?.golesLocal,
+                            golesVisitante: null,
+                          );
+                        } else {
+                          predicciones[index] = Prediccion(
+                            golesLocal: actual?.golesLocal,
+                            golesVisitante: int.parse(value),
+                          );
+                        }
+
+                        puntosUsuario[index] = calcularPuntos(index);
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+
+            if (mostrarPenales) ...[
+              const SizedBox(height: 10),
+              const Text("¿Quién gana en penales?"),
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ganadorPenalesUsuario[index] == partido.equipoLocal
+                          ? Colors.green
+                          : Colors.grey[300],
+                      foregroundColor: ganadorPenalesUsuario[index] == partido.equipoLocal
+                          ? Colors.white
+                          : Colors.black,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        ganadorPenalesUsuario[index] = partido.equipoLocal;
+                        puntosUsuario[index] = calcularPuntos(index);
+                      });
+                    },
+                    child: Text(partido.equipoLocal),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ganadorPenalesUsuario[index] == partido.equipoVisitante
+                          ? Colors.green
+                          : Colors.grey[300],
+                      foregroundColor: ganadorPenalesUsuario[index] == partido.equipoVisitante
+                          ? Colors.white
+                          : Colors.black,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        ganadorPenalesUsuario[index] = partido.equipoVisitante;
+                        puntosUsuario[index] = calcularPuntos(index);
+                      });
+                    },
+                    child: Text(partido.equipoVisitante),
                   ),
                 ],
               ),
+              // Bonus por penales
+              if (partido.serieId != null &&
+                  partido.esVuelta &&
+                  clasificadoPredicho == null &&
+                  ganadorPenalesUsuario[index] != null &&
+                  ganadorPenalesUsuario[index] == series.firstWhere((s) => s.id == partido.serieId).clasificadoReal) ...[
+                const SizedBox(height: 6),
+                const Text(
+                  "+2 puntos bonus por penales 🎯",
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ],
+
+            const SizedBox(height: 12),
+
+            Text(
+              "Puntos: ${puntosUsuario[index]}",
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
