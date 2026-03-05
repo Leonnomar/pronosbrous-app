@@ -28,6 +28,7 @@ class Partido {
     final TipoEliminatoria tipoEliminatoria;
     final bool fueAPenales;
     final String? ganadorPenalesReal;
+    final DateTime? fechaHora;
 
     Partido({
         required this.torneo,
@@ -46,6 +47,8 @@ class Partido {
         this.tipoEliminatoria = TipoEliminatoria.ninguna,
         this.fueAPenales = false,
         this.ganadorPenalesReal,
+
+        this.fechaHora,
     });
 
     bool get esEmpate => golesLocal == golesVisitante;

@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'models/partido.dart';
 import 'models/prediccion.dart';
 import 'models/serie_eliminatoria.dart';
@@ -66,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
       golesLocal: 0,
       golesVisitante: 1,
       fase: "Jornada 6",
+      fechaHora: DateTime(2026, 2, 10, 21, 0),
     ),
     Partido(
       torneo: "La Liga",
@@ -74,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
       golesLocal: 1,
       golesVisitante: 3,
       fase: "Jornada 28",
+      fechaHora: DateTime(2026, 4, 10, 13, 0),
     ),
     Partido(
       torneo: "Champions League",
@@ -85,6 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ronda: RondaEliminatoria.cuartos,
       serieId: "serie1",
       esVuelta: false,
+      fechaHora: DateTime(2026, 3, 10, 13, 0),
     ),
     Partido(
       torneo: "Champions League",
@@ -97,6 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
       serieId: "serie1",
       esVuelta: true,
       fueAPenales: false,
+      fechaHora: DateTime(2026, 4, 10, 13, 0),
     ),
     Partido(
       torneo: "Champions League",
@@ -108,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ronda: RondaEliminatoria.finalRonda,
       serieId: "final1",
       esVuelta: false,
-
+      fechaHora: DateTime(2025, 8, 31, 13, 0),
     ),
     Partido(
       torneo: "CONCACAF Champions Cup",
@@ -120,6 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ronda: RondaEliminatoria.cuartos,
       serieId: "serieConcacaf",
       esVuelta: false,
+      fechaHora: DateTime(2026, 1, 10, 19, 0),
     ),
     Partido(
       torneo: "CONCACAF Champions Cup",
@@ -132,6 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
       serieId: "serieConcacaf",
       esVuelta: true,
       fueAPenales: false,
+      fechaHora: DateTime(2026, 2, 10, 19, 0),
     ),
     Partido(
       torneo: "Liga BBVA",
@@ -143,6 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ronda: RondaEliminatoria.cuartos,
       serieId: "liguilla_cuartos_1",
       esVuelta: false,
+      fechaHora: DateTime(2025, 12, 10, 18, 0),
     ),
     Partido(
       torneo: "Liga BBVA",
@@ -155,6 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
       serieId: "liguilla_cuartos_1",
       esVuelta: true,
       fueAPenales: false,
+      fechaHora: DateTime(2025, 12, 14, 21, 0),
     )
   ];
 
@@ -523,6 +532,13 @@ class _HomeScreenState extends State<HomeScreen> {
       clasificadoPredicho = obtenerClasificadoPredicho(partido.serieId!);
     }
 
+    String fechaFormateada = "";
+
+    if (partido.fechaHora != null) {
+      final fecha = partido.fechaHora!;
+      fechaFormateada = DateFormat("dd MMM yyyy • HH:mm").format(fecha);
+    }
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
@@ -536,6 +552,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
+            ),
+
+            Row(
+              children: [
+                const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                const SizedBox(height: 4),
+                Text(
+                  fechaFormateada,
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 8),
